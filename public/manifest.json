@@ -13,6 +13,9 @@
     "default_title": "My Extension",
     "default_popup": "popup.html"
   },
+  "background": {
+    "service_worker": "background.js"
+  },
   "permissions": [],
   "content_scripts": [
     {
