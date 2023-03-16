@@ -83,7 +83,9 @@ async function getTasksTimes() {
             );
 
             matlot[1].style.backgroundColor = 'red';
+            matlot[1].style.borderRadius = '21px';
           }
+          spanText[0].style.borderRadius = '8px';
         } else {
         }
       } else {
