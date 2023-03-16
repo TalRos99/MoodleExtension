@@ -28,13 +28,12 @@ async function getTasksTimes() {
           html: html,
           att: 'isSubmitted',
         });
-        console.log(submitted);
         if (submitted) {
-          const countDown = await chrome.runtime.sendMessage({
+          const count_down = await chrome.runtime.sendMessage({
             html: html,
             att: 'countDown',
           });
-          console.log(countDown);
+          const { countDown, distance } = count_down;
           let spanText = task.getElementsByTagName('span');
           spanText[0].innerHTML =
             countDown === '' ? 'זמן ההגשה עבר' : countDown;

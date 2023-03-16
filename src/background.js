@@ -52,11 +52,23 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request) {
     if (request.att === 'countDown') {
       const milisec = cleanHtml(request.html);
-      let distance = milisec - new Date().getTime();
+      const distance = milisec - new Date().getTime();
       const countString = countDown(distance);
-      sendResponse(countString);
+      sendResponse({ countDown: countString, distance: distance });
+    }
     if (request.att === 'isSubmitted') {
-      sendResponse(isSubmitted(request.html));
+      const submitted = isSubmitted(request.html);
+      sendResponse(submitted);
     }
   }
+});
+
+chrome.tabs.onConnect.addListener(function (port) {
+  port.onMessage.addListener(function (msg) {
+    if (port.name === 'PORTRAIL') {
+      const data = msg;
+      console.log('DATA:, ', data);
+      postMessage({ data: 'TEST' });
+    }
+  });
 });

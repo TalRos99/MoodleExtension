@@ -2,10 +2,18 @@
 
 const onOffBtn = document.querySelector('.slider');
 
-var port = chrome.runtime.connect({ name: 'knockknock' });
-port.postMessage({ joke: 'Knock knock' });
-port.onMessage.addListener(function (msg) {
-  if (msg.question === "Who's there?") port.postMessage({ answer: 'Madame' });
-  else if (msg.question === 'Madame who?')
-    port.postMessage({ answer: 'Madame... Bovary' });
-});
+onOffBtn.onclick = async (e) => {
+  let queryOptions = { active: true, currentWindow: true };
+  let tabs = await chrome.tabs.query(queryOptions);
+  const port = chrome.tabs.connect(tabs[0].id, {
+    name: 'PORTRAIL',
+  });
+  port.postMessage({ data: 'test' });
+  port.onMessage.addListener(function (msg) {
+    if (msg.data) {
+      onOffBtn.style.backgroundColor = 'green';
+    } else {
+      onOffBtn.style.backgroundColor = 'red';
+    }
+  });
+};
