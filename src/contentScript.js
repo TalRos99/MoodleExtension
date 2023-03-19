@@ -15,47 +15,39 @@ async function getTasksTimes() {
   const tasks = getTopElements();
   tasks.forEach(async (task) => {
     const url = task.getElementsByTagName('a')[0]['href'];
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', url);
-    xhr.send();
-    xhr.responseType = 'document';
-    xhr.onload = async () => {
-      if (xhr.status == 200) {
-        const taskPage = await xhr.response;
-        const tableHtml = Array.from(taskPage.getElementsByTagName('tbody'));
-        const html = String(tableHtml[0].innerHTML);
-        const submitted = await chrome.runtime.sendMessage({
-          html: html,
-          att: 'isSubmitted',
-        });
-        if (submitted) {
-          const count_down = await chrome.runtime.sendMessage({
-            html: html,
-            att: 'countDown',
-          });
-          const { countDown, distance } = count_down;
-          let spanText = task.getElementsByTagName('span');
-          spanText[0].innerHTML =
-            countDown === '' ? 'זמן ההגשה עבר' : countDown;
-          if (distance < 86400000) {
-            // if the date is smaller than 1 day
+    var port = chrome.runtime.connect({
+      name: 'content',
+    });
+    port.postMessage({
+      url: url,
+      att: 'getTaskPage',
+    });
+    port.onMessage.addListener(function (msg) {
+      const submitted = msg.submitted;
+      if (submitted) {
+        const countDown = msg.countDown;
+        const distance = msg.distance;
+        let spanText = task.getElementsByTagName('span');
+        spanText[0].innerHTML = countDown === '' ? 'זמן ההגשה עבר' : countDown;
+        if (distance < 86400000) {
+          // if the date is smaller than 1 day
 
-            spanText[0].style.backgroundColor = 'red';
-            let matlot = Array.from(
-              document.getElementsByClassName('dropdown')
-            );
+          spanText[0].style.backgroundColor = 'red';
+          let matlot = Array.from(document.getElementsByClassName('dropdown'));
 
-            matlot[1].style.backgroundColor = 'red';
-            matlot[1].style.borderRadius = '21px';
-          }
-          spanText[0].style.borderRadius = '8px';
-        } else {
+          matlot[1].style.backgroundColor = 'red';
+          matlot[1].style.borderRadius = '21px';
         }
-      } else {
-        console.log('Error: ', xhr.status);
+        spanText[0].style.borderRadius = '8px';
       }
-    };
+    });
   });
+  return 'DONE';
 }
 
-getTasksTimes();
+async function startPause() {
+  const { trigger } = await chrome.storage.local.get(['trigger']);
+  trigger ? getTasksTimes() : '';
+}
+
+startPause();
