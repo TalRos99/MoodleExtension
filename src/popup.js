@@ -1,19 +1,18 @@
-'use strict';
-
 const onOffBtn = document.querySelector('.slider');
 
-onOffBtn.onclick = async (e) => {
-  let queryOptions = { active: true, currentWindow: true };
-  let tabs = await chrome.tabs.query(queryOptions);
-  const port = chrome.tabs.connect(tabs[0].id, {
-    name: 'PORTRAIL',
+onOffBtn.onclick = async function () {
+  const onOff = await chrome.storage.local
+    .get(['trigger'])
+    .then((res) => res.trigger);
+  chrome.storage.local.set({ trigger: !onOff });
+  var port = chrome.runtime.connect({
+    name: 'popup',
   });
-  port.postMessage({ data: 'test' });
+  console.log('POST: ', !onOff);
+  port.postMessage(!onOff);
   port.onMessage.addListener(function (msg) {
-    if (msg.data) {
-      onOffBtn.style.backgroundColor = 'green';
-    } else {
-      onOffBtn.style.backgroundColor = 'red';
-    }
+    console.log('RETURNED: ', msg);
+    onOffBtn.classList.add(msg.addClass);
+    onOffBtn.classList.remove(msg.removeClass);
   });
 };
