@@ -22,10 +22,8 @@ onOffBtn.onclick = async function () {
   var port = chrome.runtime.connect({
     name: 'popup',
   });
-  console.log('POST: ', !onOff);
   port.postMessage(!onOff);
   port.onMessage.addListener(function (msg) {
-    console.log('RETURNED: ', msg);
     onOffBtn.classList.add(msg.addClass);
     onOffBtn.classList.remove(msg.removeClass);
   });

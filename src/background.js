@@ -86,7 +86,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request) {
     if (request.att === 'onOff') {
       const trigger = getTrigger();
-      console.log('OnOff Trigger: ', trigger);
       sendResponse({ trigger: trigger });
     }
   }
