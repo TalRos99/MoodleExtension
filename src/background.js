@@ -56,7 +56,6 @@ async function getTaskPage(url) {
 chrome.runtime.onConnect.addListener(function (port) {
   port.onMessage.addListener(function (msg) {
     if (port.name === 'popup') {
-      console.log('Return Trigger Back', msg);
       chrome.storage.local.set({ trigger: msg });
       port.postMessage(
         msg
