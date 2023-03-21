@@ -1,4 +1,4 @@
-'use strict';
+'use-strict';
 
 chrome.storage.local.set({ trigger: true });
 
@@ -78,6 +78,26 @@ chrome.runtime.onConnect.addListener(async function (port) {
         distance: distance,
         countDown: countDownTime,
       });
+    }
+    if (port.name === 'download') {
+      const urlsArray = msg.releventUrls;
+      const zip = new JSZip();
+      const folder = zip.folder('C:/');
+      var i = 1;
+      const bolbsArray = [];
+      urlsArray.forEach((url) => {
+        console.log(url);
+        const blobPromise = fetch(url).then((r) => {
+          if (r.status === 200) return r.blob();
+          return Promise.reject(new Error(r.statusText));
+        });
+        const name = `pd${i++}.pdf`;
+        folder.file(name, blobPromise);
+      });
+
+      zip
+        .generateAsync({ type: 'blob' })
+        .then((blob) => port.postMessage(blob));
     }
   });
 });

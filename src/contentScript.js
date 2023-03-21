@@ -1,5 +1,6 @@
 'use strict';
-
+const JSZip = require('jszip');
+const FileSaver = require('file-saver');
 function getTopElements() {
   const higherPart = Array.from(
     document.getElementsByClassName('dropdown')
@@ -50,4 +51,118 @@ async function startPause() {
   trigger ? getTasksTimes() : '';
 }
 
+async function getContentClass(section) {
+  var currSection = [];
+  const filesUrls = Array.from(section.getElementsByTagName('a'));
+  filesUrls.forEach((element) => {
+    const fileName = element
+      .getElementsByTagName('span')[0]
+      .innerText.split('\n')[0];
+    if (element.innerHTML.includes('pdf')) {
+      currSection.push({ fileName: fileName + '.pdf', url: element['href'] });
+    } else if (element.innerHTML.includes('spreadsheet')) {
+      currSection.push({ fileName: fileName + '.csv', url: element['href'] });
+    } else if (element.innerHTML.includes('powerpoint')) {
+      currSection.push({ fileName: fileName + '.ppt', url: element['href'] });
+    } else if (element.innerHTML.includes('document')) {
+      currSection.push({ fileName: fileName + '.doc', url: element['href'] });
+    } else if (element.innerHTML.includes('unknown')) {
+      currSection.push({ fileName: fileName + '.txt', url: element['href'] });
+    }
+  });
+
+  return currSection;
+}
+
+async function saveFunc(blob, filename) {
+  if (window.showSaveFilePicker) {
+    const opts = {
+      types: [
+        {
+          description: 'zipFile',
+          accept: { 'application/zip': ['.zip'] },
+        },
+      ],
+      suggestedName: filename,
+    };
+    var handle = await showSaveFilePicker(opts);
+    var writable = await handle.createWritable();
+    await writable.write(blob);
+    writable.close();
+  }
+}
+const saveZip = async (filename, urlAndNames) => {
+  if (!urlAndNames) return;
+  const zip = new JSZip();
+  var i = 1;
+  urlAndNames.forEach((file) => {
+    const url = file.url;
+    const blobPromise = fetch(url).then((r) => {
+      if (r.status === 200) return r.blob();
+      return Promise.reject(new Error(r.statusText));
+    });
+    zip.file(file.fileName, blobPromise);
+  });
+  zip.generateAsync({ type: 'blob' }).then((blob) => saveFunc(blob, filename));
+};
+
+async function getAllReleventSections() {
+  var id = 0;
+  const contentClass = Array.from(document.getElementsByClassName('content'));
+  if (contentClass[0].baseURI != 'https://md.hit.ac.il/') {
+    contentClass.forEach(async (section) => {
+      const downloadFilesList = Array.from(section.getElementsByTagName('ul'));
+      const urlsArrays = await getContentClass(section);
+      if (urlsArrays.length) {
+        const sectionName = section.getElementsByTagName('h3')[0].innerText;
+        const idSelector = `dbtn${id++}`;
+        downloadFilesList[0].innerHTML =
+          downloadFilesList[0].innerHTML +
+          `<div class="download" id="${idSelector}" title="Downloads the following format: pdf, csv, doc, ppt. \nCode will download in txt format">  <i class="fa fa-download"></i><span>Download All</span>     </div>`;
+        const downloadSection = section.getElementsByClassName('download');
+        const downloadIcon = downloadSection[0].getElementsByTagName('i');
+
+        downloadSection[0].style.width = '130px';
+        downloadSection[0].style.backgroundColor = '#27be48';
+        downloadSection[0].style.color = '#fff';
+        downloadSection[0].style.padding = '8px';
+        downloadSection[0].style.transition = '1s ease';
+        downloadSection[0].style.marginTop = '15px';
+        downloadSection[0].style.marginRight = '5px';
+        downloadSection[0].style.textAlign = 'center';
+        downloadSection[0].style.cursor = 'pointer';
+        downloadSection[0].style.borderRadius = '15px';
+
+        // Insert all to an array/object and send it with one key
+        downloadIcon[0].style.marginLeft = '10px';
+        const proptiesObj = {
+          urlsArrays: urlsArrays,
+          sectionName: sectionName,
+        };
+        var setObj = {};
+        setObj[idSelector] = proptiesObj;
+        chrome.storage.local.set(setObj);
+        chrome.storage.local.set({ totalBtns: id });
+      }
+    });
+  }
+}
+async function setBtnFunctions() {
+  const { totalBtns } = await chrome.storage.local.get(['totalBtns']);
+  for (var btnId = 0; btnId < totalBtns; btnId++) {
+    const downloadBtn = document.getElementById('dbtn' + btnId);
+    downloadBtn.onclick = async function () {
+      downloadBtn.style.cursor = 'progress';
+      const id = downloadBtn.id;
+      await chrome.storage.local.get([id]).then((btnData) => {
+        return saveZip(btnData[id].sectionName, btnData[id].urlsArrays);
+      });
+      downloadBtn.style.cursor = 'pointer';
+    };
+  }
+}
+// use the log printing to get the files names from local storage and set it in the zip!!!
+
 startPause();
+getAllReleventSections();
+setBtnFunctions();
