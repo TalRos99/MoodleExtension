@@ -1,19 +1,19 @@
 'use strict';
 const JSZip = require('jszip');
 const FileSaver = require('file-saver');
-function getTopElements() {
-  const higherPart = Array.from(
+function getHighElements() {
+  const matalotDropdown = Array.from(
     document.getElementsByClassName('dropdown')
   ).find((el) => el.textContent.includes('מטלות'));
 
-  const changeTime = Array.from(
-    higherPart.getElementsByClassName('dropdown-item')
+  const timeHtml = Array.from(
+    matalotDropdown.getElementsByClassName('dropdown-item')
   );
-  return changeTime.filter((task) => !task.classList.contains('disabled'));
+  return timeHtml.filter((task) => !task.classList.contains('disabled'));
 }
 
 async function getTasksTimes() {
-  const tasks = getTopElements();
+  const tasks = getHighElements();
   tasks.forEach(async (task) => {
     const url = task.getElementsByTagName('a')[0]['href'];
     var port = chrome.runtime.connect({
@@ -24,8 +24,8 @@ async function getTasksTimes() {
       att: 'getTaskPage',
     });
     port.onMessage.addListener(function (msg) {
-      const submitted = msg.submitted;
-      if (submitted) {
+      const taskSubmitted = msg.submitted;
+      if (taskSubmitted) {
         const countDown = msg.countDown;
         const distance = msg.distance;
         let spanText = task.getElementsByTagName('span');
@@ -54,20 +54,20 @@ async function startPause() {
 async function getContentClass(section) {
   var currSection = [];
   const filesUrls = Array.from(section.getElementsByTagName('a'));
-  filesUrls.forEach((element) => {
-    const fileName = element
+  filesUrls.forEach((fileObj) => {
+    const fileName = fileObj
       .getElementsByTagName('span')[0]
       .innerText.split('\n')[0];
-    if (element.innerHTML.includes('pdf')) {
-      currSection.push({ fileName: fileName + '.pdf', url: element['href'] });
-    } else if (element.innerHTML.includes('spreadsheet')) {
-      currSection.push({ fileName: fileName + '.csv', url: element['href'] });
-    } else if (element.innerHTML.includes('powerpoint')) {
-      currSection.push({ fileName: fileName + '.ppt', url: element['href'] });
-    } else if (element.innerHTML.includes('document')) {
-      currSection.push({ fileName: fileName + '.doc', url: element['href'] });
-    } else if (element.innerHTML.includes('unknown')) {
-      currSection.push({ fileName: fileName + '.txt', url: element['href'] });
+    if (fileObj.innerHTML.includes('pdf')) {
+      currSection.push({ fileName: fileName + '.pdf', url: fileObj['href'] });
+    } else if (fileObj.innerHTML.includes('spreadsheet')) {
+      currSection.push({ fileName: fileName + '.csv', url: fileObj['href'] });
+    } else if (fileObj.innerHTML.includes('powerpoint')) {
+      currSection.push({ fileName: fileName + '.ppt', url: fileObj['href'] });
+    } else if (fileObj.innerHTML.includes('document')) {
+      currSection.push({ fileName: fileName + '.doc', url: fileObj['href'] });
+    } else if (fileObj.innerHTML.includes('unknown')) {
+      currSection.push({ fileName: fileName + '.txt', url: fileObj['href'] });
     }
   });
 
@@ -133,7 +133,6 @@ async function getAllReleventSections() {
         downloadSection[0].style.cursor = 'pointer';
         downloadSection[0].style.borderRadius = '15px';
 
-        // Insert all to an array/object and send it with one key
         downloadIcon[0].style.marginLeft = '10px';
         const proptiesObj = {
           urlsArrays: urlsArrays,
@@ -161,7 +160,6 @@ async function setBtnFunctions() {
     };
   }
 }
-// use the log printing to get the files names from local storage and set it in the zip!!!
 
 startPause();
 getAllReleventSections();
