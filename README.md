@@ -1,6 +1,6 @@
-# <img src="public/icons/graduation.png" width="45" align="left"> My Extension
+# <img src="public/icons/graduation.png" width="45" align="left"> HIT extension
 
-HIT moodle extension
+HIT moodle website chrome extension
 
 ## Features
 
