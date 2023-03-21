@@ -1,20 +1,12 @@
 # <img src="public/icons/graduation.png" width="45" align="left"> My Extension
 
-My Chrome Extension
+HIT moodle extension
 
 ## Features
 
-- Feature 1
-- Feature 2
-
-## Install
-
-[**Chrome** extension]() <!-- TODO: Add chrome extension link inside parenthesis -->
+- Set the exect time for home assignment 
+- Ability to download the whole section
 
 ## Contribution
 
 Suggestions and pull requests are welcomed!.
-
----
-
-This project was bootstrapped with [Chrome Extension CLI](https://github.com/dutiyesh/chrome-extension-cli)
