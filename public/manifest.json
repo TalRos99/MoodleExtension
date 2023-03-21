@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "HIT Extension",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "For HIT moodle website",
   "icons": {
     "16": "icons/graduation.png",
