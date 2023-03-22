@@ -164,7 +164,7 @@ async function setBtnFunctions() {
         downloadBtn.style.cursor = 'pointer';
       };
     } catch (e) {
-      console.log('Nothing to download');
+      continue;
     }
   }
 }
