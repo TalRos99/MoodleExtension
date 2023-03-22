@@ -109,7 +109,10 @@ const saveZip = async (filename, urlAndNames) => {
 async function getAllReleventSections() {
   var id = 0;
   const contentClass = Array.from(document.getElementsByClassName('content'));
-  if (contentClass[0].baseURI != 'https://md.hit.ac.il/') {
+  const releventPage = contentClass[0].baseURI.startsWith(
+    'https://md.hit.ac.il/course'
+  );
+  if (releventPage) {
     contentClass.forEach(async (section) => {
       const downloadFilesList = Array.from(section.getElementsByTagName('ul'));
       const urlsArrays = await getContentClass(section);
@@ -145,19 +148,24 @@ async function getAllReleventSections() {
       }
     });
   }
+  return releventPage;
 }
 async function setBtnFunctions() {
   const { totalBtns } = await chrome.storage.local.get(['totalBtns']);
   for (var btnId = 0; btnId < totalBtns; btnId++) {
     const downloadBtn = document.getElementById('dbtn' + btnId);
-    downloadBtn.onclick = async function () {
-      downloadBtn.style.cursor = 'progress';
-      const id = downloadBtn.id;
-      await chrome.storage.local.get([id]).then((btnData) => {
-        return saveZip(btnData[id].sectionName, btnData[id].urlsArrays);
-      });
-      downloadBtn.style.cursor = 'pointer';
-    };
+    try {
+      downloadBtn.onclick = async function () {
+        downloadBtn.style.cursor = 'progress';
+        const id = downloadBtn.id;
+        await chrome.storage.local.get([id]).then((btnData) => {
+          return saveZip(btnData[id].sectionName, btnData[id].urlsArrays);
+        });
+        downloadBtn.style.cursor = 'pointer';
+      };
+    } catch (e) {
+      console.log('Nothing to download');
+    }
   }
 }
 
