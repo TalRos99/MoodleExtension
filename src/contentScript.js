@@ -1,11 +1,11 @@
 'use strict';
 const JSZip = require('jszip');
 const FileSaver = require('file-saver');
+
 function getHighElements() {
   const matalotDropdown = Array.from(
     document.getElementsByClassName('dropdown')
   ).find((el) => el.textContent.includes('מטלות'));
-
   const timeHtml = Array.from(
     matalotDropdown.getElementsByClassName('dropdown-item')
   );
@@ -46,18 +46,18 @@ async function getTasksTimes() {
   return 'DONE';
 }
 
-async function startPause() {
-  const { trigger } = await chrome.storage.local.get(['trigger']);
-  trigger ? getTasksTimes() : '';
-}
-
 async function getContentClass(section) {
   var currSection = [];
   const filesUrls = Array.from(section.getElementsByTagName('a'));
   filesUrls.forEach((fileObj) => {
-    const fileName = fileObj
-      .getElementsByTagName('span')[0]
-      .innerText.split('\n')[0];
+    var fileName = '';
+    try {
+      fileName = fileObj
+        .getElementsByTagName('span')[0]
+        .innerText.split('\n')[0];
+    } catch {
+      fileName = '';
+    }
     if (fileObj.innerHTML.includes('pdf')) {
       currSection.push({ fileName: fileName + '.pdf', url: fileObj['href'] });
     } else if (fileObj.innerHTML.includes('spreadsheet')) {
@@ -108,47 +108,52 @@ const saveZip = async (filename, urlAndNames) => {
 
 async function getAllReleventSections() {
   var id = 0;
-  const contentClass = Array.from(document.getElementsByClassName('content'));
-  const releventPage = contentClass[0].baseURI.startsWith(
-    'https://md.hit.ac.il/course'
-  );
-  if (releventPage) {
-    contentClass.forEach(async (section) => {
-      const downloadFilesList = Array.from(section.getElementsByTagName('ul'));
-      const urlsArrays = await getContentClass(section);
-      if (urlsArrays.length) {
-        const sectionName = section.getElementsByTagName('h3')[0].innerText;
-        const idSelector = `dbtn${id++}`;
-        downloadFilesList[0].innerHTML =
-          downloadFilesList[0].innerHTML +
-          `<div class="download" id="${idSelector}" title="Downloads the following format: pdf, csv, doc, ppt. \nCode will download in txt format">  <i class="fa fa-download"></i><span>Download All</span>     </div>`;
-        const downloadSection = section.getElementsByClassName('download');
-        const downloadIcon = downloadSection[0].getElementsByTagName('i');
+  try {
+    const contentClass = Array.from(document.getElementsByClassName('content'));
+    const releventPage = contentClass[0].baseURI.startsWith(
+      'https://md.hit.ac.il/course'
+    );
+    if (releventPage) {
+      contentClass.forEach(async (section) => {
+        const downloadFilesList = Array.from(
+          section.getElementsByTagName('ul')
+        );
+        const urlsArrays = await getContentClass(section);
+        if (urlsArrays.length) {
+          const sectionName = section.getElementsByTagName('h3')[0].innerText;
+          const idSelector = `dbtn${id++}`;
+          downloadFilesList[0].innerHTML =
+            downloadFilesList[0].innerHTML +
+            `<div class="download" id="${idSelector}" title="Downloads the following format: pdf, csv, doc, ppt. \nCode will download in txt format">  <i class="fa fa-download"></i><span>Download All</span>     </div>`;
+          const downloadSection = section.getElementsByClassName('download');
+          const downloadIcon = downloadSection[0].getElementsByTagName('i');
 
-        downloadSection[0].style.width = '130px';
-        downloadSection[0].style.backgroundColor = '#27be48';
-        downloadSection[0].style.color = '#fff';
-        downloadSection[0].style.padding = '8px';
-        downloadSection[0].style.transition = '1s ease';
-        downloadSection[0].style.marginTop = '15px';
-        downloadSection[0].style.marginRight = '5px';
-        downloadSection[0].style.textAlign = 'center';
-        downloadSection[0].style.cursor = 'pointer';
-        downloadSection[0].style.borderRadius = '15px';
+          downloadSection[0].style.width = '130px';
+          downloadSection[0].style.backgroundColor = '#27be48';
+          downloadSection[0].style.color = '#fff';
+          downloadSection[0].style.padding = '8px';
+          downloadSection[0].style.transition = '1s ease';
+          downloadSection[0].style.marginTop = '15px';
+          downloadSection[0].style.marginRight = '5px';
+          downloadSection[0].style.textAlign = 'center';
+          downloadSection[0].style.cursor = 'pointer';
+          downloadSection[0].style.borderRadius = '15px';
 
-        downloadIcon[0].style.marginLeft = '10px';
-        const proptiesObj = {
-          urlsArrays: urlsArrays,
-          sectionName: sectionName,
-        };
-        var setObj = {};
-        setObj[idSelector] = proptiesObj;
-        chrome.storage.local.set(setObj);
-        chrome.storage.local.set({ totalBtns: id });
-      }
-    });
+          downloadIcon[0].style.marginLeft = '10px';
+          const proptiesObj = {
+            urlsArrays: urlsArrays,
+            sectionName: sectionName,
+          };
+          var setObj = {};
+          setObj[idSelector] = proptiesObj;
+          chrome.storage.local.set(setObj);
+          chrome.storage.local.set({ totalBtns: id });
+        }
+      });
+    }
+  } catch (e) {
+    return;
   }
-  return releventPage;
 }
 async function setBtnFunctions() {
   const { totalBtns } = await chrome.storage.local.get(['totalBtns']);
@@ -164,11 +169,18 @@ async function setBtnFunctions() {
         downloadBtn.style.cursor = 'pointer';
       };
     } catch (e) {
-      continue;
+      return;
     }
   }
 }
 
+async function startPause() {
+  const { trigger } = await chrome.storage.local.get(['trigger']);
+  if (trigger) {
+    getTasksTimes();
+    getAllReleventSections();
+    setBtnFunctions();
+  }
+}
+
 startPause();
-getAllReleventSections();
-setBtnFunctions();
