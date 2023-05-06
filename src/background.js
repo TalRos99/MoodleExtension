@@ -2,6 +2,21 @@
 
 chrome.storage.local.set({ trigger: true });
 
+const monthDict = {
+  ינואר: 1,
+  פברואר: 2,
+  מרץ: 3,
+  אפריל: 4,
+  מאי: 5,
+  יוני: 6,
+  יולי: 7,
+  אוגוסט: 8,
+  ספטמבר: 9,
+  אוקטובר: 10,
+  נובמבר: 11,
+  דצמבר: 12,
+};
+
 function countDown(distance) {
   let days = Math.floor(distance / (1000 * 60 * 60 * 24));
   let hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -25,14 +40,16 @@ async function cleanHtml(html) {
   dateString = dateString[0].replace(/<.*>\n/, '');
   dateString = dateString.replace(/<.*?>/gm, '');
   const date_time = dateString.split(', ');
-  const date = date_time[0].split('/');
-  const time = date_time[1].split(':');
+  const date = date_time[1].split(' ');
+  const time = date_time[2].split(' ');
+  const ampm = time[1] == 'PM' ? 12 : 0;
+  const hh_mm = time[0].split(':');
   const milisec = new Date(
     date[2],
-    Number(date[1]) - 1,
+    monthDict[date[1]] - 1,
     date[0],
-    time[0],
-    time[1]
+    Number(hh_mm[0]) + ampm,
+    hh_mm[1]
   ).getTime();
   return milisec - new Date().getTime();
 }
